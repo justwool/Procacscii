@@ -1,0 +1,8 @@
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background:#0e0f11; color:#e8eaef; }
+.app { display:grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
+.controls { padding: 14px; display:flex; flex-direction:column; gap:8px; background:#16181d; overflow:auto; }
+.controls label { display:flex; justify-content:space-between; gap:8px; font-size:12px; align-items:center; }
+.controls input[type='number'] { width: 100px; }
+.viewport { padding: 10px; display:flex; gap:10px; align-items:flex-start; }
+.ascii { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:8px; line-height:8px; white-space:pre; background:black; padding:10px; }
+.fileLoad input { display:none; }
