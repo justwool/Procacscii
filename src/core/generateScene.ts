@@ -19,15 +19,34 @@ export interface SceneSpec {
   primitives: PrimitiveSpec[];
 }
 
+function paramsForPrimitive(kind: PrimitiveKind, params: Params, mix: number): Params {
+  if (kind === 'ribbons') {
+    return { ...params, density: params.density * mix };
+  }
+
+  if (kind === 'steps') {
+    return { ...params, stepCount: Math.max(1, Math.round(params.stepCount * mix)) };
+  }
+
+  if (kind === 'fieldLines') {
+    return { ...params, lineCount: Math.max(1, Math.round(params.lineCount * mix)) };
+  }
+
+  return params;
+}
+
 export function generateScene(params: Params, rng: RNG, style: StyleSpec): SceneSpec {
   const primitives: PrimitiveSpec[] = [];
   (Object.keys(params.primitiveMix) as PrimitiveKind[]).forEach((kind) => {
-    if (params.primitiveMix[kind] <= 0) return;
+    const mix = params.primitiveMix[kind];
+    if (mix <= 0) return;
 
-    if (kind === 'ribbons') primitives.push(...registry.ribbons.generate(params, rng, style));
-    if (kind === 'steps') primitives.push(...registry.steps.generate(params, rng, style));
-    if (kind === 'fieldLines') primitives.push(...registry.fieldLines.generate(params, rng, style));
-    if (kind === 'blobs') primitives.push(...registry.blobs.generate(params, rng, style));
+    const scaledParams = paramsForPrimitive(kind, params, mix);
+
+    if (kind === 'ribbons') primitives.push(...registry.ribbons.generate(scaledParams, rng, style));
+    if (kind === 'steps') primitives.push(...registry.steps.generate(scaledParams, rng, style));
+    if (kind === 'fieldLines') primitives.push(...registry.fieldLines.generate(scaledParams, rng, style));
+    if (kind === 'blobs') primitives.push(...registry.blobs.generate(scaledParams, rng, style));
   });
 
   return { primitives };
