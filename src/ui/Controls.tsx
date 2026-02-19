@@ -45,9 +45,9 @@ export function Controls({ params, setParams, onRegenerate, onExportPNG, onCopyA
       <h2>Procacscii</h2>
       <label>Seed <input type="number" value={params.seed} onChange={(e) => setParams((p) => ({ ...p, seed: Number(e.target.value) }))} /></label>
       <button onClick={onRegenerate}>Randomize / Regenerate</button>
-      <label>Mode
+      <label>Overlay
         <select value={params.renderMode} onChange={(e) => setParams((p) => ({ ...p, renderMode: e.target.value as Params['renderMode'] }))}>
-          <option>Solid</option><option>ASCII</option>
+          <option value="Off">Off</option><option value="ASCII Overlay">ASCII Overlay</option>
         </select>
       </label>
       <label>Hue mode

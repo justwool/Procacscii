@@ -65,7 +65,7 @@ export interface Params {
   primitiveMix: PrimitiveMix;
   cameraPreset: 'near' | 'mid' | 'far';
   backgroundBias: number;
-  renderMode: 'Solid' | 'ASCII';
+  renderMode: 'Off' | 'ASCII Overlay';
   post: PostSettings;
   ascii: ASCIISettings;
   pngExportPost: boolean;
@@ -102,7 +102,7 @@ export const defaultParams: Params = {
   primitiveMix: { ribbons: 1, steps: 1, fieldLines: 1, blobs: 0 },
   cameraPreset: 'mid',
   backgroundBias: 0,
-  renderMode: 'Solid',
+  renderMode: 'Off',
   post: {
     postEnabled: true,
     framing: { enabled: true, strength: 0.5, probability: 1 },
