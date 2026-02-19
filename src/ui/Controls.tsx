@@ -12,6 +12,33 @@ interface Props {
   onLoadParams: (text: string) => void;
 }
 
+interface NumberControlProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}
+
+function NumberControl({ label, value, min, max, step, onChange }: NumberControlProps) {
+  const updateValue = (nextValue: number) => {
+    if (Number.isNaN(nextValue)) return;
+    const clamped = Math.min(max, Math.max(min, nextValue));
+    onChange(clamped);
+  };
+
+  return (
+    <label>
+      {label}
+      <span className="numberControl">
+        <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => updateValue(Number(e.target.value))} />
+        <input type="number" min={min} max={max} step={step} value={value} onChange={(e) => updateValue(Number(e.target.value))} />
+      </span>
+    </label>
+  );
+}
+
 export function Controls({ params, setParams, onRegenerate, onExportPNG, onCopyASCII, onDownloadTXT, onSaveParams, onLoadParams }: Props) {
   return (
     <div className="controls">
@@ -28,10 +55,38 @@ export function Controls({ params, setParams, onRegenerate, onExportPNG, onCopyA
           <option value="analogous">analogous</option><option value="complement">complement</option><option value="triad">triad</option><option value="random-walk">random-walk</option>
         </select>
       </label>
-      <label>Contrast <input type="range" min="0" max="1" step="0.01" value={params.contrast} onChange={(e) => setParams((p) => ({ ...p, contrast: Number(e.target.value) }))} /></label>
-      <label>Primitive ribbons <input type="range" min="0" max="1" step="1" value={params.primitiveMix.ribbons} onChange={(e) => setParams((p) => ({ ...p, primitiveMix: { ...p.primitiveMix, ribbons: Number(e.target.value) } }))} /></label>
-      <label>Primitive steps <input type="range" min="0" max="1" step="1" value={params.primitiveMix.steps} onChange={(e) => setParams((p) => ({ ...p, primitiveMix: { ...p.primitiveMix, steps: Number(e.target.value) } }))} /></label>
-      <label>Primitive field lines <input type="range" min="0" max="1" step="1" value={params.primitiveMix.fieldLines} onChange={(e) => setParams((p) => ({ ...p, primitiveMix: { ...p.primitiveMix, fieldLines: Number(e.target.value) } }))} /></label>
+      <NumberControl
+        label="Contrast"
+        min={0}
+        max={1}
+        step={0.01}
+        value={params.contrast}
+        onChange={(value) => setParams((p) => ({ ...p, contrast: value }))}
+      />
+      <NumberControl
+        label="Primitive ribbons"
+        min={0}
+        max={5}
+        step={0.1}
+        value={params.primitiveMix.ribbons}
+        onChange={(value) => setParams((p) => ({ ...p, primitiveMix: { ...p.primitiveMix, ribbons: value } }))}
+      />
+      <NumberControl
+        label="Primitive steps"
+        min={0}
+        max={5}
+        step={0.1}
+        value={params.primitiveMix.steps}
+        onChange={(value) => setParams((p) => ({ ...p, primitiveMix: { ...p.primitiveMix, steps: value } }))}
+      />
+      <NumberControl
+        label="Primitive field lines"
+        min={0}
+        max={5}
+        step={0.1}
+        value={params.primitiveMix.fieldLines}
+        onChange={(value) => setParams((p) => ({ ...p, primitiveMix: { ...p.primitiveMix, fieldLines: value } }))}
+      />
       <label>ASCII cols <input type="number" value={params.ascii.cols} onChange={(e) => setParams((p) => ({ ...p, ascii: { ...p.ascii, cols: Number(e.target.value) } }))} /></label>
       <label>ASCII rows <input type="number" value={params.ascii.rows} onChange={(e) => setParams((p) => ({ ...p, ascii: { ...p.ascii, rows: Number(e.target.value) } }))} /></label>
       <label>ANSI <input type="checkbox" checked={params.ascii.ansiEnabled} onChange={(e) => setParams((p) => ({ ...p, ascii: { ...p.ascii, ansiEnabled: e.target.checked } }))} /></label>
