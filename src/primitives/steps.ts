@@ -1,31 +1,38 @@
 import * as THREE from 'three';
 import type { PrimitiveModule } from './types';
+import { colorFor, createMaterial } from './materials';
 
 const steps: PrimitiveModule<'steps'> = {
-  generate: (params) => [
-    {
-      kind: 'steps',
-      data: {
-        levels: params.stepCount,
-        height: params.stepHeight,
-        depth: params.stepDepth,
-        taper: params.taper,
-        spacing: params.spacing,
-      },
-    },
-  ],
+  generate: (params, _rng, _style, field) => {
+    const boxes: { pos: [number, number, number]; scale: [number, number, number]; level: number }[] = [];
+    const grid = Math.max(4, Math.round(params.stepCount / 2));
+    for (let gx = 0; gx < grid; gx += 1) {
+      for (let gz = 0; gz < grid; gz += 1) {
+        const x = ((gx / Math.max(1, grid - 1)) - 0.5) * field.domainRadius * 1.8;
+        const z = ((gz / Math.max(1, grid - 1)) - 0.5) * field.domainRadius * 1.8;
+        if (params.compositionMode === 'framed' && (Math.abs(x) > field.domainRadius * 0.72 || Math.abs(z) > field.domainRadius * 0.72)) {
+          continue;
+        }
+        const n = field.sampleScalar(x, 0, z);
+        const quantized = Math.round(n * params.stepCount * (0.4 + params.terraceStrength));
+        const level = Math.max(1, Math.abs(quantized));
+        boxes.push({
+          pos: [x, level * params.stepHeight * 0.4 - field.domainRadius * 0.15, z],
+          scale: [params.stepDepth * (1 - params.taper * 0.2), params.stepHeight * level, params.stepDepth * (1 - params.taper * 0.2)],
+          level,
+        });
+      }
+    }
+
+    return [{ kind: 'steps', data: { boxes } }];
+  },
   buildThreeObjects: (spec, style) => {
     const g = new THREE.Group();
-    const { levels, height, depth, taper, spacing } = spec.data;
-    for (let i = 0; i < levels; i += 1) {
-      const scale = 1 - (i / Math.max(1, levels - 1)) * taper;
-      const geom = new THREE.BoxGeometry(5 * scale, height, depth * scale);
-      const color = style.palette.accents[i % style.palette.accents.length];
-      const mat = new THREE.MeshLambertMaterial({ color });
-      const mesh = new THREE.Mesh(geom, mat);
-      mesh.position.y = i * (height + spacing) - (levels * (height + spacing)) / 3;
-      mesh.position.z = i * 0.12;
-      mesh.rotation.y = i * 0.02;
+    for (const box of spec.data.boxes) {
+      const geom = new THREE.BoxGeometry(box.scale[0], box.scale[1], box.scale[2]);
+      const color = colorFor(style, box.level, box.level / 10);
+      const mesh = new THREE.Mesh(geom, createMaterial(style, color));
+      mesh.position.set(...box.pos);
       g.add(mesh);
     }
     return g;

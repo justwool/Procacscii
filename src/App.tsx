@@ -4,6 +4,7 @@ import { ThreeScene } from './render/three/ThreeScene';
 import { runPostLayers } from './render/post/layers';
 import { canvasToAscii } from './render/ascii/ascii';
 import { Controls } from './ui/Controls';
+import { randomizeParams } from './core/randomize';
 
 export default function App() {
   const [params, setParams] = useState<Params>(defaultParams);
@@ -22,7 +23,7 @@ export default function App() {
       <Controls
         params={params}
         setParams={setParams}
-        onRegenerate={() => setParams((p) => ({ ...p, seed: (p.seed + 7919) >>> 0 }))}
+        onRegenerate={() => setParams((p) => randomizeParams(p))}
         onExportPNG={() => {
           if (!exportCanvas) return;
           const a = document.createElement('a');
@@ -54,7 +55,7 @@ export default function App() {
       />
       <div className="viewport">
         <ThreeScene params={params} onBaseCanvas={setBaseCanvas} />
-        {params.renderMode === 'ASCII' && <pre className="ascii">{ascii}</pre>}
+        {params.renderMode === 'ASCII Overlay' && <pre className="ascii">{ascii}</pre>}
       </div>
     </div>
   );

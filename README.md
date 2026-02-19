@@ -4,94 +4,53 @@ Deterministic procedural art web app built with Vite + React + TypeScript + thre
 
 ## Pipeline
 
-Implemented pipeline order in code:
-
 1. `style = deriveStyle(params, rng)` (`src/core/style.ts`)
-2. `sceneSpec = generateScene(params, rng, style)` (`src/core/generateScene.ts`)
-3. WebGL render to base canvas (`src/render/three/ThreeScene.tsx`)
-4. Optional deterministic post layers to post canvas (`src/render/post/layers.ts`)
-5. ASCII sampling from base or post via toggle (`src/render/ascii/ascii.ts`)
-6. PNG export from base or post via toggle (`src/App.tsx`)
+2. `field = createFieldContext(params)` (`src/core/field.ts`)
+3. `sceneSpec = generateScene(params, rng, style)` (`src/core/generateScene.ts`)
+4. WebGL render to base canvas (`src/render/three/ThreeScene.tsx`)
+5. Optional deterministic post layers (`src/render/post/layers.ts`)
+6. ASCII sampling from base/post (`src/render/ascii/ascii.ts`)
 
-## Determinism
+## Shared procedural field
 
-- Seeded RNG: `mulberry32` in `src/core/rng.ts`.
-- Params are JSON serializable and contain all generation/post/ascii controls in `src/core/params.ts`.
-- Save/Load Params JSON available from UI controls.
+`src/core/noise.ts` and `src/core/field.ts` provide seeded value noise + fBm, domain warping, scalar sampling, and a vector field.
+All primitives use this shared field:
 
-## Primitive system
+- `fieldLines`: streamlines through `sampleVector`
+- `ribbons`: advection paths through same vector field
+- `steps`: noise-driven heightfield with terracing
+- `blobs`: noise-positioned instanced sphere blobs
 
-Registry pattern in `src/core/generateScene.ts` with modules in `src/primitives/*`:
+## Parameter influence map
 
-- `ribbons` (CatmullRom + TubeGeometry)
-- `steps` (stacked slabs)
-- `fieldLines` (vector field linework)
-- `blobs` scaffold slot
+- `seed`, `paletteSeedOffset` → field + palette seeding
+- `hueMode`, `contrast`, `brightnessBias`, `saturationBias`, `backgroundBias` → palette generation (`src/core/palette.ts`)
+- `materialModel`, `roughness`, `metalness`, `colorApplicationMode` → primitive materials/colors (`src/primitives/materials.ts`)
+- `terraceStrength`, `stepCount`, `stepHeight`, `stepDepth`, `taper`, `spacing` → step/ribbon geometry (`src/primitives/steps.ts`, `src/primitives/ribbons.ts`)
+- `bendAmount`, `lineCount`, `stepsPerLine`, `fieldStrength`, `jitter`, `lineWidth` → field line + ribbon advection (`src/primitives/fieldLines.ts`, `src/primitives/ribbons.ts`)
+- `density`, `scale`, `compositionMode`, `primitiveMix` → primitive counts, domain size/layout (`src/core/generateScene.ts`, `src/core/field.ts`)
+- `renderMode` (UI label: Overlay), post controls, ASCII controls, export toggles → display/output pipeline (`src/App.tsx`, `src/ui/Controls.tsx`)
 
-Each primitive exposes:
+## Randomize
 
-- `generate(params, rng, style)`
-- `buildThreeObjects(spec, style)`
+`randomizeParams` (`src/core/randomize.ts`) now randomizes a meaningful seeded subset:
 
-## Palette + style
-
-Procedural palette generation in `src/core/palette.ts`:
-
-- background
-- 3-8 accents
-- gradient stops
-
-Controlled by hue mode, contrast, brightness, saturation, and seed offset. No hardcoded curated palettes.
-
-## Post layers
-
-Toggleable deterministic stack:
-
-- framing/vignette
-- tiling/panels
-- block swaps
-- warp
-
-All live in `src/render/post/layers/*` and orchestrated in `src/render/post/layers.ts`.
-
-## ASCII + ANSI
-
-`canvasToAscii(canvas, options)` supports:
-
-- monochrome luminance mapping
-- ANSI color (`16color` or `xterm256`)
-- efficient color run grouping
-- copy/download txt in UI
-
-## Controls
-
-`src/ui/Controls.tsx` includes minimum controls for:
-
-- seed/regenerate
-- render mode (Solid/ASCII)
-- primitive mix
-- palette + post toggles
-- ascii controls
-- source toggles for ascii/png
-- export/copy/save/load actions
+- seed, primitive mix weights
+- density / line counts / step counts
+- field strength / jitter / terrace
+- palette seed offset / background bias
+- post layer toggles + strengths
 
 ## Tests
 
-Vitest coverage:
+Vitest coverage includes:
 
-- RNG determinism
-- palette determinism/bounds
-- ASCII mapping stability
+- deterministic scene hashing for same params
+- influence tests for key params (hash changes)
+- randomize determinism with override seed
 
 Run:
 
 ```bash
-npm test
-```
-
-## Dev
-
-```bash
-npm install
-npm run dev
+npm test -- --run
 ```
